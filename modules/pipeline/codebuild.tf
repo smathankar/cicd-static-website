@@ -30,25 +30,33 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 18
-   
+      nodejs: 16
     commands:
-        # install npm
-        - npm install
-       
+      - echo Installing dependencies...
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo Running pre-build tasks...
+
   build:
     commands:
-        # run build script
-        - npm run build
-     
+      - echo Building the React app...
+      - npx react-scripts build
+
+  post_build:
+    commands:
+      - echo Build completed.
+      - echo Deploying to S3...
+      - aws s3 sync build/ s3://${var.bucket_artifact_name}/
+      - rm -dir build -f
+      - echo Creating CloudFront invalidation...
+      - aws cloudfront create-invalidation --distribution-id ${var.cloudfront_distribution_id} --paths "/*"
+
 artifacts:
-  # include all files required to run the application
   files:
-    - public/**/*
-    - src/**/*
-    - package.json
-    - appspec.yml
-    - scripts/**/*
+    - '**/*'
+
 EOF
   }
 }

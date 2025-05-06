@@ -68,6 +68,14 @@ resource "aws_iam_policy" "codebuild_policy" {
             "kms:ListKeys"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "CloudFrontInvalidation"
+        Effect = "Allow"
+        Action = [
+            "cloudfront:CreateInvalidation"
+        ]
+        Resource = "*"
       }
     ]
   })

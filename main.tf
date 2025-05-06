@@ -12,6 +12,7 @@ module "pipeline" {
   github_repository_username = var.github_repository_username
   github_repository_name    = var.github_repository_name
   github_token_secret_manager_name = var.github_token_secret_manager_name
+  cloudfront_distribution_id = module.cloudfront.cloudfront_distribution_id
   
   depends_on = [ module.s3_bucket ]
 }

@@ -50,7 +50,6 @@ variable "github_token_secret_manager_name" {
 type = string
 }
 
-
 # S3 Bucket
 
 variable "static_bucket_name" {
