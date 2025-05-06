@@ -1,0 +1,63 @@
+resource "aws_kms_key" "pipeline_artifact" {
+  description             = "KMS key for CodePipeline resource encryption"
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "${var.prefix}-${var.environment}-kms-pipeline-arti"
+    Statement = [
+      {
+        Sid       = "KmsAllowKeyAdministration"
+        Effect    = "Allow"
+        Action    = "kms:*"
+        Resource  = "*"
+        Principal = {
+          AWS = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-${var.environment}-CodePipeline-Service-Role",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-${var.environment}-CodeBuild-Service-Role"
+          ]
+        }
+      },
+      {
+        Sid       = "KmsAllowKeyUsage"
+        Effect    = "Allow"
+        Action    = [
+          "kms:Decrypt", "kms:DescribeKey", "kms:Encrypt", "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlainText", "kms:ReEncrypt", "kms:ReEncryptTo",
+          "kms:ReEncryptFrom", "kms:TagResource", "kms:CreateKey"
+        ]
+        Resource  = "*"
+        Principal = {
+          AWS = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-${var.environment}-CodePipeline-Service-Role",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-${var.environment}-CodeBuild-Service-Role"
+          ]
+        }
+      },
+      {
+        Sid       = "KMSAllowGrants"
+        Effect    = "Allow"
+        Action    = ["kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrants"]
+        Resource  = "*"
+        Condition = {
+          Bool = { "kms:GrantIsForAWSResource" = "true" }
+        }
+        Principal = {
+          AWS = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-${var.environment}-CodePipeline-Service-Role",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-${var.environment}-CodeBuild-Service-Role"
+          ]
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_kms_alias" "terragrunt_artifact" {
+  name          = "alias/${var.prefix}-${var.environment}-pipeline-arti"
+  target_key_id = aws_kms_key.pipeline_artifact.key_id
+}
